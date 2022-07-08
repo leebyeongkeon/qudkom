@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qudkom.web.dao.board.post.PostMapper">
+    <sql id="postKey">
+        WHERE board_no=#{boardNo}
+        AND post_no=#{postNo}
+    </sql>
+    <sql id="postKeyAbbrev">
+        WHERE p.board_no=#{boardNo}
+        AND p.post_no=#{postNo}
+        AND c.post_category_no=p.post_category_no
+    </sql>
+    <sql id="byUser">
+        WHERE board_no=#{boardNo}
+        AND user_no=#{userNo}
+    </sql>
+    <sql id="fts-query">
+        MATCH(<foreach collection="search.queries" item="query" separator=",">${query}</foreach>)
+        AGAINST("
+        <foreach collection="search.words" item="word">
+            +${word}*
+        </foreach>
+        " IN BOOLEAN MODE)
+    </sql>
+    <sql id="paging">
+        LIMIT #{paging.pageSize} OFFSET #{paging.offset}
+    </sql>
+<!--    <select id="select" parameterType="Post" resultType="PostDto">-->
+<!--        SELECT p.*, c.category_name FROM post p, post_category c-->
+<!--        <include refid="postKeyAbbrev"/>-->
+<!--    </select>-->
+    <select id="select" parameterType="Post" resultType="PostDto">
+        SELECT p.*, c.category_name
+        FROM post p, board b, post_category c
+        WHERE p.board_no=#{boardNo}
+          AND p.post_no=#{postNo}
+          AND b.board_no=p.board_no
+          AND c.board_category_no=b.board_category_no
+          AND c.post_category_no=p.post_category_no;
+    </select>
+    <select id="selectCount" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM post WHERE board_no=#{boardNo}
+    </select>
+    <select id="selectList" parameterType="BoardParamBundle" resultType="PostDto">
+        SELECT p.*,c.category_name FROM post p
+        FORCE INDEX(board_post_idx),
+        board b, post_category c
+        WHERE p.board_no=#{fieldBundle.boardNo}
+        AND b.board_no=p.board_no
+        AND c.board_category_no=b.board_category_no
+        AND c.post_category_no=p.post_category_no
+        <include refid="paging" />
+    </select>
+    <select id="selectCountByUserNo" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM post
+        WHERE user_no=#{userNo}
+    </select>
+    <select id="selectListByUserNo" parameterType="BoardParamBundle" resultType="Post">
+        SELECT * FROM post
+        <include refid="byUser"/>
+        ORDER BY post_date DESC
+        <include refid="paging" />
+    </select>
+    <select id="selectCountByUserNoInBoard" parameterType="Post" resultType="int">
+        SELECT COUNT(*) FROM post
+        <include refid="byUser"/>
+    </select>
+    <select id="selectListByUserNoInBoard" parameterType="BoardParamBundle" resultType="Post">
+        SELECT * FROM post
+        <include refid="byUser"/>
+        ORDER BY post_no DESC
+        <include refid="paging" />
+    </select>
+    <select id="selectSearchedCountAll" parameterType="BoardParamBundle" resultType="int">
+        SELECT COUNT(*) FROM post
+        WHERE
+        <include refid="fts-query" />
+    </select>
+    <select id="selectSearchedListAll" parameterType="BoardParamBundle" resultType="PostDto">
+        SELECT p.*, b.board_name FROM post p, board b
+        WHERE b.board_no=p.board_no AND
+        <include refid="fts-query" />
+        ORDER BY p.post_date DESC
+        <include refid="paging" />
+    </select>
+    <select id="selectSearchedCountInBoard" parameterType="BoardParamBundle" resultType="int">
+        SELECT COUNT(*) FROM post
+        WHERE board_no=#{fieldBundle.boardNo} AND
+        <include refid="fts-query" />
+    </select>
+    <select id="selectSearchedListInBoard" parameterType="BoardParamBundle" resultType="PostDto">
+        SELECT p.*, c.category_name FROM post p, board b, post_category c
+        WHERE p.board_no=#{fieldBundle.boardNo}
+        AND b.board_no=p.board_no
+        AND c.board_category_no=b.board_category_no
+        AND c.post_category_no=p.post_category_no AND
+        <include refid="fts-query" />
+        ORDER BY p.post_no DESC
+        <include refid="paging" />
+    </select>
+    <select id="selectCommentCount" parameterType="Comment" resultType="int">
+        SELECT comment_count FROM post WHERE board_no=#{boardNo} AND post_no=#{postNo}
+    </select>
+    <insert id="insert" statementType="CALLABLE" parameterType="Post" keyProperty="postNo">
+        CALL usp_post_insert(#{boardNo},#{userNo},#{nickname},#{profile},#{exp},
+            #{postCategoryNo},#{title},#{content},#{hasImage})
+        <selectKey keyColumn="pno" resultType="int" keyProperty="postNo" order="AFTER">
+            SELECT MAX(p.post_no) as pno FROM post p WHERE p.board_no=#{boardNo}
+        </selectKey>
+    </insert>
+    <update id="update" parameterType="Post">
+        UPDATE post
+        SET title=#{title}, content=#{content},
+            has_image=#{hasImage}, post_category_no=#{postCategoryNo}
+        <include refid="postKey"/>
+    </update>
+    <update id="updateCountFieldInPost" parameterType="BoardParamBundle">
+        UPDATE post
+        SET ${sqlStr.field}=${sqlStr.field} ${sqlStr.sign} 1
+        WHERE board_no=#{fieldBundle.boardNo} AND post_no=#{fieldBundle.postNo}
+    </update>
+    <delete id="delete" parameterType="Post">
+        DELETE FROM post
+        <include refid="postKey"/>
+    </delete>
+</mapper>

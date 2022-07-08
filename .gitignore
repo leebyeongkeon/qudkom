@@ -1,0 +1,15 @@
+.idea
+.settings
+lib
+out
+target
+
+auth.properties
+.classpath
+.project
+.springBeans
+*.mwb.bak
+*.mwb.beforefix
+
+*.txt
+*.class

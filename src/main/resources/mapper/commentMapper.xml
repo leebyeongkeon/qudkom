@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qudkom.web.dao.board.post.comment.CommentMapper">
+    <sql id="commentKey">
+        WHERE board_no=#{boardNo}
+        AND post_no=#{postNo}
+        AND comment_no=#{commentNo}
+    </sql>
+    <select id="select" parameterType="Comment" resultType="Comment">
+        SELECT * FROM comment
+        <include refid="commentKey"/>
+    </select>
+    <select id="selectCount" parameterType="Comment" resultType="int">
+        SELECT COUNT(*) FROM board_no=#{boardNo} AND post_no=#{postNo}
+    </select>
+    <select id="selectNoList" parameterType="Comment" resultType="int">
+        WITH RECURSIVE comment_cte AS (
+            SELECT comment_no, CAST(LPAD(comment_no, 3, 0) AS CHAR(200)) path
+            FROM comment
+            WHERE board_no = #{boardNo} AND post_no = #{postNo} AND parent_comment IS NULL
+            UNION ALL
+            SELECT c.comment_no, CONCAT(p.path, LPAD(c.comment_no, 3, 0))
+            FROM comment_cte p, comment c
+            WHERE c.board_no=#{boardNo} AND c.post_no=#{postNo} and c.parent_comment = p.comment_no
+        )
+        SELECT comment_no
+        FROM comment_cte
+        ORDER BY path;
+    </select>
+    <select id="selectList" parameterType="CommentParamBundle" resultType="CommentDto">
+        WITH RECURSIVE comment_cte AS (
+            SELECT board_no, post_no, comment_no, user_no, nickname, profile, exp, content, comment_date, like_count, dislike_count, status, parent_comment, CAST('' AS CHAR(15)) AS parent_comment_nickname, 1 level, CAST(LPAD(comment_no, 3, 0) AS CHAR(200)) path
+            FROM comment
+            WHERE board_no = #{comment.boardNo} AND post_no = #{comment.postNo} AND parent_comment IS NULL
+            UNION ALL
+            SELECT c.board_no, c.post_no, c.comment_no, c.user_no, c.nickname, c.profile, c.exp, c.content, c.comment_date, c.like_count, c.dislike_count, c.status, c.parent_comment, CAST(p.nickname AS CHAR(15)), level + 1, CONCAT(p.path, LPAD(c.comment_no, 3, 0))
+            FROM comment_cte p, comment c
+            WHERE c.board_no=#{comment.boardNo} AND c.post_no=#{comment.postNo} and c.parent_comment = p.comment_no
+        )
+        SELECT board_no, post_no, comment_no, user_no, nickname, profile, exp, content, comment_date, like_count, dislike_count, status, parent_comment, parent_comment_nickname, level AS depth
+        FROM comment_cte
+        ORDER BY path LIMIT #{paging.pageSize} OFFSET #{paging.offset};
+    </select>
+<!--    <select id="selectParentStatus">-->
+<!--        SELECT status FROM-->
+<!--    </select>-->
+    <select id="selectCountByUserNo">
+        SELECT COUNT(*)
+        FROM comment
+        <include refid="commentKey"/>
+    </select>
+    <select id="selectByUserNo" parameterType="int" resultType="Comment">
+        SELECT * FROM comment
+        WHERE user_no=#{userNo}
+        ORDER BY comment_date DESC
+    </select>
+    <select id="selectLikeCount" parameterType="CommentLike" resultType="Comment">
+        SELECT like_count, dislike_count FROM comment
+        <include refid="commentKey"/>
+    </select>
+    <select id="selectExists" parameterType="Comment" resultType="boolean">
+        SELECT EXISTS (
+        SELECT * FROM comment
+        <include refid="commentKey"/>
+        )
+    </select>
+    <select id="selectExistsChild" parameterType="Comment" resultType="boolean">
+        SELECT EXISTS (
+            SELECT * FROM comment
+            WHERE board_no=#{boardNo}
+              AND post_no=#{postNo}
+              AND parent_comment=#{commentNo}
+        )
+    </select>
+    <select id="selectParentComment" parameterType="Comment" resultType="Comment">
+        SELECT * FROM comment
+        WHERE board_no=#{boardNo}
+        AND post_no=#{postNo}
+        AND comment_no=#{parentComment}
+    </select>
+    <insert statementType="CALLABLE" id="insert" parameterType="Comment" keyProperty="commentNo">
+        CALL usp_comment_insert(#{boardNo},#{postNo},#{userNo},#{nickname},#{profile},
+        #{exp},#{content},#{parentComment},#{depth})
+        <selectKey keyColumn="cno" resultType="int" keyProperty="commentNo" order="AFTER">
+            SELECT MAX(c.comment_no) as cno
+            FROM comment c
+            WHERE c.board_no=#{boardNo}
+            AND c.post_no=#{postNo}
+        </selectKey>
+    </insert>
+    <update id="update" parameterType="Comment">
+        UPDATE comment
+        SET content=#{content}, status=#{status}
+        <include refid="commentKey"/>
+    </update>
+    <update id="updateCountField" parameterType="BoardParamBundle">
+        UPDATE comment
+        SET ${sqlStr.field}=${sqlStr.field} ${sqlStr.sign} 1
+        WHERE board_no=#{fieldBundle.boardNo}
+        AND post_no=#{fieldBundle.postNo}
+        AND comment_no=#{fieldBundle.commentNo}
+    </update>
+    <update id="updateStatus" parameterType="Comment">
+        UPDATE comment
+        SET content=#{content}, status=#{status}
+        <include refid="commentKey"/>
+    </update>
+    <delete id="delete" parameterType="Comment">
+        DELETE FROM comment
+        <include refid="commentKey"/>
+    </delete>
+</mapper>

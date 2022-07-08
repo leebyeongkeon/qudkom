@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+	   xmlns:util="http://www.springframework.org/schema/util"
+
+	   xsi:schemaLocation="
+
+	   http://www.springframework.org/schema/util
+	   http://www.springframework.org/schema/util/spring-util.xsd
+	   http://www.springframework.org/schema/beans
+	   http://www.springframework.org/schema/beans/spring-beans.xsd
+	   http://www.springframework.org/schema/context
+	   http://www.springframework.org/schema/context/spring-context.xsd
+	   http://www.springframework.org/schema/tx
+	   http://www.springframework.org/schema/tx/spring-tx.xsd
+	   http://www.springframework.org/schema/aop
+	   http://www.springframework.org/schema/aop/spring-aop.xsd
+	">
+<!--	http://www.springframework.org/schema/task-->
+<!--	http://www.springframework.org/schema/task/spring-task.xsd-->
+
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	<util:properties id="auth" location="classpath:auth.properties"/>
+	<bean id="dataSourceSpied" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="#{auth['database.driver']}"></property>
+		<property name="url" value="#{auth['database.url']}?useUnicode=true&amp;characterEncoding=utf8"></property>
+		<property name="username" value="#{auth['database.username']}"></property>
+		<property name="password" value="#{auth['database.password']}"></property>
+<!--		3.x에서는 안됨-->
+	</bean>
+	<bean id="dataSource" class="net.sf.log4jdbc.Log4jdbcProxyDataSource">
+		<constructor-arg ref="dataSourceSpied" />
+		<property name="logFormatter">
+			<bean class="net.sf.log4jdbc.tools.Log4JdbcCustomFormatter">
+				<property name="loggingType" value="MULTI_LINE" />
+				<property name="sqlPrefix" value="SQL : "/>
+			</bean>
+		</property>
+	</bean>
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="configLocation"  value="classpath:mybatis-config.xml"/>
+		<property name="mapperLocations" value="classpath:mapper/*Mapper.xml"/>
+	</bean>
+
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg ref="sqlSessionFactory"/>
+	</bean>
+<!--	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionFactoryBean" />-->
+
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.gmail.com"/>
+		<property name="defaultEncoding" value="utf-8"/>
+		<property name="username" value="#{auth['gmail.username']}"/>
+		<property name="password" value="#{auth['gmail.password']}"/>
+		<property name="port" value="587"/>
+		<property name="protocol" value="smtp"/>
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.transport.protocol">smtp</prop>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+				<prop key="mail.debug">true</prop>
+				<prop key="mail.smtp.ssl.trust">smtp.gmail.com</prop>
+				<prop key="mail.smtp.ssl.protocols">TLSv1.2</prop>
+
+<!--				<prop key="mail.smtp.ssl.enable">true</prop>-->
+			</props>
+		</property>
+	</bean>
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>userinfo_error_message</value>
+			</list>
+		</property>
+		<property name="defaultEncoding" value="UTF-8"/>
+	</bean>
+	<bean id="messageSourceAccessor" class="org.springframework.context.support.MessageSourceAccessor">
+		<constructor-arg ref="messageSource"/>
+	</bean>
+	<bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+	<context:component-scan base-package="com.qudkom.web">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+		<context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+	</context:component-scan>
+<!--	<aop:aspectj-autoproxy/>-->
+<!--	servlet-context에만 작성해놓을 경우 컨트롤러만 적용, root-context에만 작성해놓는 경우 컨트롤러에 적용되지 않음-->
+<!--	기본적으로 인터페이스 구현체에만 적용되기 때문에 컨트롤러에 적용하기 위해 servlet에 적을때는 proxy-target-class=true 설정 추가-->
+	<tx:annotation-driven/>
+</beans>

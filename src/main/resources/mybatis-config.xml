@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+    </settings>
+    <typeAliases>
+        <typeAlias alias="Post" type="com.qudkom.web.domain.vo.board.post.Post"/>
+        <typeAlias alias="PostDto" type="com.qudkom.web.domain.dto.extended.board.post.PostDto"/>
+        <typeAlias alias="PostCategory" type="com.qudkom.web.domain.vo.board.post.PostCategory"/>
+        <typeAlias alias="PostLike" type="com.qudkom.web.domain.vo.board.post.PostLike"/>
+        <typeAlias alias="Board" type="com.qudkom.web.domain.vo.board.Board"/>
+        <typeAlias alias="BoardCategory" type="com.qudkom.web.domain.vo.board.BoardCategory"/>
+        <typeAlias alias="BoardDto" type="com.qudkom.web.domain.dto.extended.board.BoardDto"/>
+        <typeAlias alias="CommentLike" type="com.qudkom.web.domain.vo.board.post.comment.CommentLike"/>
+        <typeAlias alias="Comment" type="com.qudkom.web.domain.vo.board.post.comment.Comment"/>
+        <typeAlias alias="CommentDto" type="com.qudkom.web.domain.dto.extended.board.post.comment.CommentDto"/>
+        <typeAlias alias="Image" type="com.qudkom.web.domain.vo.board.post.image.Image"/>
+        <typeAlias alias="ImageDto" type="com.qudkom.web.domain.dto.extended.board.post.image.ImageDto"/>
+        <typeAlias alias="User" type="com.qudkom.web.domain.vo.user.User"/>
+        <typeAlias alias="Memo" type="com.qudkom.web.domain.vo.user.memo.Memo"/>
+        <typeAlias alias="Alarm" type="com.qudkom.web.domain.vo.user.alarm.Alarm"/>
+        <typeAlias alias="MemoDto" type="com.qudkom.web.domain.dto.extended.user.memo.MemoDto"/>
+        <typeAlias alias="Search" type="com.qudkom.web.domain.dto.param.Search"/>
+
+        <typeAlias alias="UserProfileInfoDto" type="com.qudkom.web.domain.dto.extended.user.UserProfileInfoDto"/>
+        <typeAlias alias="AlarmDto" type="com.qudkom.web.domain.dto.extended.user.alarm.AlarmDto"/>
+
+        <typeAlias alias="BoardParamBundle" type="com.qudkom.web.domain.dto.param.bundle.BoardParamBundle"/>
+        <typeAlias alias="CommentParamBundle" type="com.qudkom.web.domain.dto.param.bundle.CommentParamBundle"/>
+        <typeAlias alias="MemoParamBundle" type="com.qudkom.web.domain.dto.param.bundle.MemoParamBundle"/>
+        <typeAlias alias="AlarmParamBundle" type="com.qudkom.web.domain.dto.param.bundle.AlarmParamBundle"/>
+
+    </typeAliases>
+</configuration>

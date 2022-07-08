@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qudkom.web.dao.user.memo.MemoTemporaryMapper">
+    <select id="selectList" parameterType="MemoParamBundle" resultType="MemoDto">
+        SELECT m.send_user user_no,
+               m.temp_no memo_no,
+               m.receive_user counterpart_user,
+               m.*, u.nickname
+        FROM memo_temporary m FORCE INDEX(memo_temp_idx), user u
+        WHERE m.send_user=#{memoDto.userNo}
+          AND u.user_no=m.receive_user
+            LIMIT #{paging.pageSize} OFFSET #{paging.offset}
+    </select>
+    <select id="select" parameterType="MemoDto" resultType="MemoDto">
+        SELECT m.send_user user_no,
+               m.temp_no memo_no,
+               m.receive_user counterpart_user,
+               m.*, u.nickname
+        FROM memo_temporary m, user u
+        WHERE m.send_user=#{userNo}
+            AND m.temp_no=#{memoNo}
+          AND u.user_no=m.receive_user
+    </select>
+    <select id="selectCount" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM memo_temporary
+        WHERE send_user=#{userNo}
+    </select>
+    <insert id="insert" statementType="CALLABLE" parameterType="MemoDto" keyProperty="memoNo">
+        CALL usp_memo_temp(#{userNo},#{counterpartUser},#{title},#{content})
+        <selectKey keyColumn="mno" resultType="int" keyProperty="memoNo" order="AFTER">
+            SELECT MAX(m.temp_no) as mno FROM memo_temporary m WHERE m.send_user=#{userNo}
+        </selectKey>
+    </insert>
+    <delete id="deleteList" parameterType="MemoParamBundle">
+        DELETE FROM memo_temporary
+        WHERE send_user=#{memoDto.userNo} AND temp_no IN
+        <foreach collection="memoNoList" open="(" close=")" item="no" separator=",">
+            #{no}
+        </foreach>
+    </delete>
+</mapper>

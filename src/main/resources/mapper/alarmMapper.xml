@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qudkom.web.dao.user.AlarmMapper">
+    <select id="selectList" parameterType="AlarmParamBundle" resultType="AlarmDto">
+        SELECT a.*, p.title, c.content, u.nickname, b.board_name
+        FROM alarm a FORCE INDEX(alarm_idx), user u, board b, post p, comment c
+        WHERE a.user_no=#{alarm.userNo}
+          AND b.board_no=a.board_no
+          AND p.board_no=a.board_no AND p.post_no=a.post_no
+          AND c.board_no=a.board_no AND c.post_no=a.post_no AND c.comment_no=a.comment_no
+          AND u.user_no=c.user_no
+            LIMIT #{paging.pageSize} OFFSET #{paging.offset}
+    </select>
+    <select id="selectNewCount" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM alarm WHERE user_no=#{userNo} AND status=-1
+    </select>
+    <select id="selectCount" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM alarm WHERE user_no=#{userNo}
+    </select>
+    <insert id="insert" statementType="CALLABLE" parameterType="Alarm" keyProperty="alarmNo">
+        CALL usp_alarm_insert(#{userNo},#{boardNo},#{postNo},#{commentNo})
+        <selectKey keyColumn="ano" resultType="int" order="AFTER" keyProperty="alarmNo">
+            SELECT MAX(a.alarm_no) AS ano FROM alarm a WHERE a.user_no=#{userNo}
+        </selectKey>
+    </insert>
+    <update id="updateList" parameterType="int">
+        UPDATE alarm SET status=0 WHERE user_no=#{userNo} AND status=-1
+    </update>
+    <update id="update" parameterType="Alarm">
+        UPDATE alarm SET status=1
+        WHERE user_no=#{userNo}
+          AND alarm_no=#{alarmNo}
+          AND status=0
+    </update>
+    <delete id="delete" parameterType="Alarm">
+        DELETE FROM alarm WHERE user_no=#{userNo} AND alarm_no=#{alarmNo}
+    </delete>
+    <delete id="deleteAll" parameterType="int">
+        DELETE FROM alarm WHERE user_no=#{userNo}
+    </delete>
+</mapper>

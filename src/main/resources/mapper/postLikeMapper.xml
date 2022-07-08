@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qudkom.web.dao.board.post.PostLikeMapper">
+    <sql id="selectPostLike">
+        SELECT * FROM post_like
+        WHERE board_no=#{boardNo}
+          AND post_no=#{postNo}
+          AND user_no=#{userNo}
+    </sql>
+    <select id="selectExists" parameterType="PostLike" resultType="boolean">
+        SELECT EXISTS (
+                       <include refid="selectPostLike"/>
+                   )
+    </select>
+    <select id="select" parameterType="PostLike" resultType="PostLike">
+        <include refid="selectPostLike"/>
+    </select>
+    <insert id="insert" parameterType="PostLike">
+        INSERT INTO post_like VALUES(#{boardNo},#{postNo},#{userNo},#{isLike})
+    </insert>
+    <delete id="delete" parameterType="PostLike">
+        DELETE FROM post_like WHERE board_no=#{boardNo} AND post_no=#{postNo} AND user_no=#{userNo}
+    </delete>
+    <delete id="deleteList" parameterType="Post">
+        DELETE FROM post_like WHERE board_no=#{boardNo} AND post_no=#{postNo}
+        AND user_no IN (SELECT * FROM (SELECT user_no FROM post_like WHERE board_no=#{boardNo} AND post_no=#{postNo}) AS uno_list)
+    </delete>
+</mapper>

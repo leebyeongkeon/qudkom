@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+        "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+        "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+    <definition name="layout.common" template="/WEB-INF/views/inc/layout.jsp">
+        <put-attribute name="header" value="/WEB-INF/views/inc/header.jsp"/>
+        <put-attribute name="nav" value="/WEB-INF/views/inc/nav.jsp"/>
+        <put-attribute name="ad" value="/WEB-INF/views/inc/ad.jsp"/>
+        <put-attribute name="footer" value="/WEB-INF/views/inc/footer.jsp"/>
+    </definition>
+    <definition name="home.*" extends="layout.common" template="/WEB-INF/views/inc/layout.jsp">
+        <put-attribute name="main" value="/WEB-INF/views/home/{1}.jsp"/>
+    </definition>
+    <definition name="board.*" extends="layout.common" template="/WEB-INF/views/inc/layout.jsp">
+        <put-attribute name="main" value="/WEB-INF/views/board/{1}.jsp"/>
+    </definition>
+    <definition name="user.*" extends="layout.common" template="/WEB-INF/views/inc/layout.jsp">
+        <put-attribute name="main" value="/WEB-INF/views/user/info/{1}.jsp"/>
+    </definition>
+    <definition name="memo.*" template="/WEB-INF/views/user/popup/popUp.jsp">
+        <put-attribute name="header" value="/WEB-INF/views/user/popup/memo/header.jsp"/>
+        <put-attribute name="main" value="/WEB-INF/views/user/popup/memo/{1}.jsp"/>
+    </definition>
+    <definition name="alarm" template="/WEB-INF/views/user/popup/alarm.jsp">
+    </definition>
+    <definition name="error.*" extends="layout.common" template="/WEB-INF/views/inc/layout.jsp">
+        <put-attribute name="main" value="/WEB-INF/views/error/{1}.jsp"/>
+    </definition>
+
+</tiles-definitions>

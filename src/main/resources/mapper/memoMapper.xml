@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qudkom.web.dao.user.memo.MemoMapper">
+    <select id="selectReceiveList" parameterType="MemoParamBundle" resultType="MemoDto">
+        SELECT m.receive_user user_no,
+               m.receive_no memo_no,
+               m.send_user counterpart_user,
+               m.*, u.nickname
+        FROM memo m FORCE INDEX(memo_receive_idx), user u
+        WHERE m.receive_user=#{memoDto.userNo}
+          AND m.receive_save=#{memoDto.save}
+          AND m.receive_delete=false
+          AND m.memo_date>DATE_SUB(NOW(), INTERVAL 7 DAY)
+          AND u.user_no=m.send_user
+            LIMIT #{paging.pageSize} OFFSET #{paging.offset}
+    </select>
+    <select id="selectSendList" parameterType="MemoParamBundle" resultType="MemoDto">
+        SELECT m.send_user user_no,
+               m.send_no memo_no,
+               m.receive_user counterpart_user,
+               m.*, u.nickname
+        FROM memo m FORCE INDEX(memo_send_idx), user u
+        WHERE m.send_user=#{memoDto.userNo}
+          AND m.send_save=#{memoDto.save}
+          AND m.send_delete=false
+          AND m.memo_date>DATE_SUB(NOW(), INTERVAL 7 DAY)
+          AND u.user_no=m.receive_user
+            LIMIT #{paging.pageSize} OFFSET #{paging.offset}
+    </select>
+    <select id="selectReceive" parameterType="MemoDto" resultType="MemoDto">
+        SELECT m.receive_user user_no,
+               m.receive_no memo_no,
+               m.send_user counterpart_user,
+               m.*, u.nickname
+        FROM memo m, user u
+        WHERE m.receive_user=#{userNo}
+          AND m.receive_no=#{memoNo}
+          AND m.receive_delete=false
+          AND m.receive_save=#{save}
+          AND u.user_no= m.send_user
+    </select>
+    <select id="selectSend" parameterType="MemoDto" resultType="MemoDto">
+        SELECT m.send_user user_no,
+               m.send_no memo_no,
+               m.receive_user counterpart_user,
+               m.*, u.nickname
+        FROM memo m, user u
+        WHERE m.send_user=#{userNo}
+          AND m.send_no=#{memoNo}
+          AND m.send_delete=false
+          AND m.send_save=#{save}
+          AND u.user_no=m.receive_user
+    </select>
+    <select id="selectUnreadReceiveCount" parameterType="MemoDto" resultType="int">
+        SELECT COUNT(*) FROM memo
+        WHERE receive_user=#{userNo}
+        AND receive_save=#{save}
+        AND receive_delete=false
+        AND opened=false
+        <if test="!receiveSave">
+            AND memo_date>DATE_SUB(NOW(), INTERVAL 7 DAY)
+        </if>
+    </select>
+    <select id="selectUnreadSendCount" parameterType="MemoDto" resultType="int">
+        SELECT COUNT(*) FROM memo
+        WHERE send_user=#{userNo}
+        AND send_save=#{save}
+        AND send_delete=false
+        AND opened=false
+        <if test="!sendSave">
+            AND memo_date>DATE_SUB(NOW(), INTERVAL 7 DAY)
+        </if>
+    </select>
+    <select id="selectReceiveCount" parameterType="MemoDto" resultType="int">
+        SELECT COUNT(*) FROM memo
+        WHERE receive_user=#{userNo}
+        AND receive_save=#{save}
+        AND receive_delete=false
+        <if test="!receiveSave">
+            AND memo_date>DATE_SUB(NOW(), INTERVAL 7 DAY)
+        </if>
+    </select>
+    <select id="selectSendCount" parameterType="MemoDto" resultType="int">
+        SELECT COUNT(*) FROM memo
+        WHERE send_user=#{userNo}
+        AND send_save=#{save}
+        AND send_delete=false
+        <if test="!sendSave">
+            AND memo_date>DATE_SUB(NOW(), INTERVAL 7 DAY)
+        </if>
+    </select>
+    <select id="selectNewCount" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM memo
+        WHERE receive_user=#{userNo}
+          AND receive_confirm=false
+          AND memo_date>DATE_SUB(NOW(), INTERVAL 7 DAY)
+    </select>
+    <insert id="insert" statementType="CALLABLE" parameterType="MemoDto" keyProperty="memoNo">
+        CALL usp_memo_insert(#{userNo},#{counterpartUser},#{title},#{content})
+        <selectKey keyColumn="mno" resultType="int" keyProperty="memoNo" order="AFTER">
+            SELECT MAX(m.send_no) AS mno FROM memo m WHERE m.send_user=#{userNo}
+        </selectKey>
+    </insert>
+    <update id="updateNewCount" parameterType="int">
+        UPDATE memo SET receive_confirm=true
+        WHERE receive_user=#{userNo}
+          AND receive_confirm=false
+          AND memo_date>DATE_SUB(NOW(), INTERVAL 7 DAY)
+    </update>
+    <update id="updateOpened" parameterType="MemoDto">
+        UPDATE memo SET opened=true
+        WHERE receive_user=#{userNo}
+        AND receive_no=#{memoNo}
+        AND opened=false
+    </update>
+    <update id="updateReceiveList" parameterType="MemoParamBundle">
+        UPDATE memo SET receive_save=true
+        WHERE receive_user=#{memoDto.userNo} AND receive_no IN
+        <foreach collection="memoNoList" open="(" close=")" item="no" separator=",">
+            #{no}
+        </foreach>
+    </update>
+    <update id="updateSendList" parameterType="MemoParamBundle">
+        UPDATE memo SET send_save=true
+        WHERE send_user=#{memoDto.userNo} AND send_no IN
+        <foreach collection="memoNoList" open="(" close=")" item="no" separator=",">
+            #{no}
+        </foreach>
+    </update>
+    <update id="deleteReceiveList" parameterType="MemoParamBundle">
+        UPDATE memo SET receive_delete=true
+        WHERE receive_user=#{memoDto.userNo} AND receive_no IN
+        <foreach collection="memoNoList" open="(" close=")" item="no" separator=",">
+            #{no}
+        </foreach>
+    </update>
+    <update id="deleteSendList" parameterType="MemoParamBundle">
+        UPDATE memo SET send_delete=true
+        WHERE send_user=#{memoDto.userNo} AND send_no IN
+        <foreach collection="memoNoList" open="(" close=")" item="no" separator=",">
+            #{no}
+        </foreach>
+    </update>
+</mapper>

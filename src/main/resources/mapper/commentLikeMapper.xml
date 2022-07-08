@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qudkom.web.dao.board.post.comment.CommentLikeMapper">
+    <sql id="commentLikeKey">
+        WHERE board_no=#{boardNo}
+        AND post_no=#{postNo}
+        AND comment_no=#{commentNo}
+        AND user_no=#{userNo}
+    </sql>
+    <select id="selectExists" resultType="boolean" parameterType="CommentLike">
+        SELECT EXISTS (
+            SELECT * FROM comment_like
+            <include refid="commentLikeKey"/>
+        )
+    </select>
+    <select id="select" parameterType="CommentLike" resultType="CommentLike">
+        SELECT * FROM comment_like
+        <include refid="commentLikeKey"/>
+    </select>
+    <insert id="insert" parameterType="CommentLike">
+        INSERT INTO comment_like(board_no, post_no, comment_no, user_no, is_like)
+        VALUES(#{boardNo},#{postNo},#{commentNo},#{userNo},#{isLike})
+    </insert>
+    <delete id="delete" parameterType="CommentLike">
+        DELETE FROM comment_like
+        <include refid="commentLikeKey"/>
+    </delete>
+    <delete id="deleteList" parameterType="comment">
+        DELETE
+        FROM comment_like
+        WHERE board_no = #{boardNo}
+          AND post_no = #{postNo}
+          AND comment_no = #{commentNo}
+          AND user_no IN (SELECT * FROM (SELECT user_no
+                                        FROM comment_like
+                                        WHERE board_no = #{boardNo}
+                                          AND post_no = #{postNo}
+                                          AND comment_no = #{commentNo})
+                            AS uno_list
+                        )
+    </delete>
+</mapper>

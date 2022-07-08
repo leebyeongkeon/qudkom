@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qudkom.web.dao.board.post.image.ImageMapper">
+    <select id="selectList" parameterType="Image" resultType="Image">
+        SELECT * FROM image
+        WHERE board_no=#{boardNo}
+        AND post_no=#{postNo}
+    </select>
+    <select id="selectFilenameList" parameterType="Image" resultType="string">
+        SELECT filename FROM image
+        WHERE board_no=#{boardNo}
+          AND post_no=#{postNo}
+    </select>
+    <insert id="insert" parameterType="Image">
+        INSERT INTO image(board_no, post_no, filename, original_filename, path)
+        VALUES(#{boardNo}, #{postNo}, #{filename}, #{originalFilename}, #{path})
+    </insert>
+    <delete id="delete" parameterType="Image">
+        DELETE FROM image
+        WHERE board_no=#{boardNo}
+        AND post_no=#{postNo}
+        AND filename=#{filename}
+    </delete>
+    <delete id="deleteList" parameterType="ImageDto">
+        DELETE FROM image
+        WHERE board_no=#{boardNo}
+        AND post_no=#{postNo}
+        AND filename IN
+        <foreach collection="filenames" separator="," open="(" close=")" item="filename">
+            #{filename}
+        </foreach>
+    </delete>
+</mapper>

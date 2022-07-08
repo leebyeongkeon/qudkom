@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qudkom.web.dao.user.UserMapper">
+<!--    <insert id="insertTest" parameterType="com.qudkom.web.domain.vo.user.User" useGeneratedKeys="true" keyColumn="user_no" keyProperty="userNo">-->
+<!--        INSERT IGNORE INTO user(id, password, nickname, email, profile, exp, point)-->
+<!--        VALUES(#{id},#{password},#{nickname},#{email},#{profile},#{exp},#{point})-->
+<!--    </insert>-->
+    <insert id="insert" parameterType="User" keyProperty="userNo">
+        INSERT INTO user(id, password, nickname, email)
+        VALUES(#{id},#{password},#{nickname},#{email})
+        <selectKey keyColumn="user_no" keyProperty="userNo" resultType="int" order="AFTER">
+            SELECT user_no FROM user WHERE id=#{id}
+        </selectKey>
+    </insert>
+<!--    <insert id="insertUserMemoInfo" parameterType="int">-->
+<!--        INSERT INTO user_memo_info(user_no) VALUES (#{userNo})-->
+<!--    </insert>-->
+    <select id="selectUserForLogin" parameterType="string" resultType="UserProfileInfoDto">
+        SELECT *
+        FROM user WHERE id=#{id}
+    </select>
+    <select id="selectIdExists" parameterType="string" resultType="boolean">
+        SELECT EXISTS (SELECT id FROM user where id=#{id})
+    </select>
+    <select id="selectNicknameExists" parameterType="string" resultType="boolean">
+        SELECT EXISTS (SELECT nickname FROM user where nickname=#{nickname})
+    </select>
+    <select id="selectEmailExists" parameterType="string" resultType="boolean">
+        SELECT EXISTS (SELECT email FROM user where email=#{email})
+    </select>
+    <select id="selectUserByAutoKey" parameterType="string" resultType="UserProfileInfoDto">
+        SELECT * FROM user WHERE auto_key=#{autoKey} AND auto_key_expiry_date > NOW()
+    </select>
+    <select id="selectList" parameterType="Search" resultType="User">
+        SELECT user_no, id, nickname from user WHERE ${query} LIKE CONCAT('%',#{word},'%')
+    </select>
+    <update id="updateUserAutoKey" parameterType="User">
+        UPDATE user
+        SET auto_key=#{autoKey}, auto_key_expiry_date=#{autoKeyExpiryDate}
+        WHERE user_no=#{userNo}
+    </update>
+    <update id="updateUserAutoKeyInvalid" parameterType="int">
+        UPDATE user
+        SET auto_key_expiry_date=NOW()
+        WHERE user_no=#{userNo}
+    </update>
+</mapper>

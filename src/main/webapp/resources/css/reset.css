@@ -1,0 +1,29 @@
+body, li{
+    padding: 0;
+    margin: 0;
+}
+body *{
+    color: #2c2c2c;
+}
+ul{
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+a{
+    /* color: black; */
+    text-decoration: none;
+}
+/* form *:focus, select:focus, a:focus{ */
+*:focus{
+    outline: none;
+}
+table{
+    border-spacing: 0px;
+}
+button, input[type=submit]{
+    cursor: pointer;
+}
+h1,h2,h3,h4,h5,h6{
+    margin: 0;
+}
